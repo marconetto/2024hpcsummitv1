@@ -44,7 +44,7 @@ LINK TO STEP-BY-STEP: HERE
 
 LINK TO STEP-BY-STEP: HERE
 
-### 5. Demo: end-2-end application via Python SDK
+### 5. Demo: end-2-end application via Python SDK (10min)
 
 - Show motivation of this tool
 - Show video demo
