@@ -42,6 +42,8 @@ LINK TO STEP-BY-STEP: HERE
 - Highlight the use of azure batch StartTask
 - Highlight the use of resource monitoring
 
+LINK TO STEP-BY-STEP: HERE
+
 ### 5. Demo: end-2-end application via Python SDK
 
 - Show motivation of this tool
