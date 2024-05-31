@@ -9,7 +9,7 @@
 5. Choose the location to be **East US**
 6. Review and Create. 
 
-### Pool, Job and Task 
+### Pool
 
 1. Open the deployed batch account and select the **Pools** option from the left navigation pane. 
 2. Click on **+Add** 
