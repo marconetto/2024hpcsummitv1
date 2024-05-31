@@ -16,6 +16,8 @@ Run executable:
 
 Copy the task results to local machine via ``scp`` to jumpbox VM, ``azcopy``, or
 [Azure Storage Explorer ](https://azure.microsoft.com/en-us/products/storage/storage-explorer).
+You may need to add a DNS entry in your local machine to solve the private IP of the storate account
+endpoint.
 
 ```
 azcopy login
