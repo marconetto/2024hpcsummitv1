@@ -14,12 +14,14 @@ Run executable:
 ./batch_openfoam.sh -g myresourcegroup
 ```
 
-Copy the task results to local machine via ``scp`` to jumpbox VM or ``azcopy``.
+Copy the task results to local machine via ``scp`` to jumpbox VM, ``azcopy``, or
+[Azure Storage Explorer ](https://azure.microsoft.com/en-us/products/storage/storage-explorer).
 
 ```
 azcopy login
 azcopy copy <Blob SAS URL> "mydata"
 ```
+
 
 Delete resource groups:
 
