@@ -4,14 +4,14 @@
 2. Add a task in the job, and name it as task1
 3. Enter the command in command line as given below (replace the storage account and storage account key)
 
-``
+```
 /bin/bash -c "inputfile=LowPriVMs-2.mp4 outputfile=LowPriVMs-2.mp3 \
 mystorageaccount=YOUR_STORAGE_ACCOUNT \
 key=STORAGE_ACOOUNT_KEY && \
 ffmpeg -i $inputfile $outputfile && \
 sleep 30 && \
 az storage blob upload --account-name $mystorageaccount --account-key $key --container-name mycontainer --file $HOME/$outputfile --name $outputfile --overwrite"
-``
+```
 
 This commands uses ffmpeg to process the input mp4 file and generate the output mp3 file. The output file is saved in the home directory. The output file is then uploaded to the output container using the az storage blob upload command.  
 
