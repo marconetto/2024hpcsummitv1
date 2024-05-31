@@ -20,7 +20,9 @@
 7. Enable Start Task
 8. Enter the following command line 
 
-``/bin/bash -c "sudo apt-get update && sudo apt-get install -y ffmpeg"``
+```
+/bin/bash -c "sudo apt-get update && sudo apt-get install -y ffmpeg"
+```
 
 9. Select the Elevation level - Pool autouser, Admin'
 10. Set Wait for success to True
@@ -39,7 +41,8 @@
 2. Name the task as task1
 3. Enter a command line as 
 
-`` echo "Hello world -- I am task1 ``
+``` echo "Hello world -- I am task1 
+```
 
 4. View the output of the task in stdout.txt
 
