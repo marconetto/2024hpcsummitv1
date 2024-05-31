@@ -42,7 +42,7 @@
 3. Enter a command line as 
 
 ```
-echo "Hello world -- I am task1 
+echo "Hello world -- I am task1 "
 ```
 
 4. View the output of the task in stdout.txt
