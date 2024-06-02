@@ -42,7 +42,7 @@ LINK TO STEP-BY-STEP: HERE
 - Highlight the use of azure batch StartTask
 - Highlight the use of resource monitoring
 
-LINK TO STEP-BY-STEP: HERE
+Details: [HERE](./batchmpicli/README.md)
 
 ### 5. Demo: end-2-end application via Python SDK (10min)
 

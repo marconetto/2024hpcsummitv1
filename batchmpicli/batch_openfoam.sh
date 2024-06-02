@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 
-# RG=netto240521summitv3
+set -x
+# RG=netto240530test5
 SKU=Standard_HB120-16rs_v3
+# VMIMAGE=microsoft-dsvm:ubuntu-hpc:2204:latest
 VMIMAGE=almalinux:almalinux-hpc:8_6-hpc-gen2:latest
+# NODEAGENTSKUID="batch.node.ubuntu 22.04"
 NODEAGENTSKUID="batch.node.el 8"
 REGION=eastus
-
+#
 # STORAGEACCOUNT="$RG"sa
 # BATCHACCOUNT="$RG"ba
 # KEYVAULT="$RG"kv
@@ -15,7 +18,7 @@ STORAGEFILE=data
 JSON_POOL=pool_nfs.json
 JSON_TASK=task_mpi.json
 
-VNETADDRESS=10.37.0.0
+VNETADDRESS=10.14.0.0
 
 VPNRG=nettovpn2
 VPNVNET=nettovpn2vnet1
@@ -24,9 +27,9 @@ VPNVNET=nettovpn2vnet1
 # VMVNETNAME="$RG"VNET
 # VMSUBNETNAME="$RG"SUBNET
 ADMINUSER=azureuser
-DNSZONENAME="privatelink.file.core.windows.net"
+DNSZONENAME="privatelink.blob.core.windows.net"
 
-POOLNAME=mpipool2
+POOLNAME=mpipool
 JOBNAME=mpijob
 
 function setup_variables() {
@@ -75,7 +78,7 @@ function create_vm() {
 runcmd:
 - echo "mounting shared storage on the vm"
 - mkdir /nfs
-- mount $STORAGEACCOUNT.file.core.windows.net:/$STORAGEACCOUNT/$STORAGEFILE /nfs/
+- mount -o sec=sys,vers=3,nolock,proto=tcp  $STORAGEACCOUNT.blob.core.windows.net:/$STORAGEACCOUNT/$STORAGEFILE /nfs/
 EOF
 
   az vm create -n "$vmname" \
@@ -114,24 +117,58 @@ function get_subnetid() {
 
 function create_storage_account_files_nfs() {
 
+  # echo "$STORAGEACCOUNT"
+  # az storage account create \
+  #   --resource-group "$RG" \
+  #   --name "$STORAGEACCOUNT" \
+  #   --location "$REGION" \
+  #   --kind StorageV2 \
+  #   --sku Premium_LRS \
+  #   --enable-nfs-v3 true \
+  #   --https-only false \
+  #   --output none
+
   az storage account create \
     --resource-group "$RG" \
     --name "$STORAGEACCOUNT" \
     --location "$REGION" \
-    --kind FileStorage \
+    --kind BlockBlobStorage \
     --sku Premium_LRS \
-    --output none
+    --https-only false \
+    --enable-hierarchical-namespace true \
+    --enable-nfs-v3 true \
+    --default-action Deny
+
+  az network vnet subnet update --resource-group "$RG" \
+    --vnet-name "$VMVNETNAME" \
+    --name "$VMSUBNETNAME" \
+    --service-endpoints Microsoft.Storage
+
+  az storage account network-rule add --resource-group "$RG" \
+    --account-name "$STORAGEACCOUNT" \
+    --vnet-name "$VMVNETNAME" \
+    --subnet "$VMSUBNETNAME"
+
+  # az storage account network-rule add \
+  #   --account-name mystor
+  #   --resource-group MyResourceGroup \
+  #   --vnet-name myVNet \
+  #   --subnet mySubnet
 
   # disable secure transfer is required for nfs support
-  az storage account update --https-only false \
-    --name "$STORAGEACCOUNT" --resource-group "$RG"
+  #  az storage account update --https-only false \
+  #   --name "$STORAGEACCOUNT" --resource-group "$RG"
 
-  az storage share-rm create \
+  az storage container-rm create \
     --storage-account "$STORAGEACCOUNT" \
-    --enabled-protocol NFS \
-    --root-squash NoRootSquash \
     --name "$STORAGEFILE" \
-    --quota 100
+    --root-squash NoRootSquash
+  # az storage container create \
+  #   --storage-account "$STORAGEACCOUNT" \
+  #   --enabled-protocol NFS \
+  #   --root-squash NoRootSquash \
+  #   --name "$STORAGEFILE" \
+  #   --quota 100
 
   storage_account_id=$(az storage account show \
     --resource-group "$RG" --name "$STORAGEACCOUNT" \
@@ -144,7 +181,7 @@ function create_storage_account_files_nfs() {
     --location "$REGION" \
     --subnet "$subnetid" \
     --private-connection-resource-id "${storage_account_id}" \
-    --group-id "file" \
+    --group-id "blob" \
     --connection-name "$STORAGEACCOUNT-Connection" \
     --query "id" -o tsv)
 
@@ -184,11 +221,11 @@ function create_storage_account_files_nfs() {
     --record-set-name "$STORAGEACCOUNT" \
     --ipv4-address "${endpoint_ip}"
 
-  az storage share-rm list -g "$RG" \
-    --storage-account "$STORAGEACCOUNT"
+  #az storage share-rm list -g "$RG" \
+  #  --storage-account "$STORAGEACCOUNT"
 
   echo "inside the test VM:"
-  echo "sudo mkdir /nfs ; sudo mount $STORAGEACCOUNT.file.core.windows.net:/$STORAGEACCOUNT/$STORAGEFILE /nfs/"
+  echo "sudo mkdir /nfs ; sudo mount -o sec=sys,vers=3,nolock,proto=tcp $STORAGEACCOUNT.blob.core.windows.net:/$STORAGEACCOUNT/$STORAGEFILE /nfs/"
 }
 
 function create_keyvault() {
@@ -198,6 +235,7 @@ function create_keyvault() {
   az keyvault create --resource-group "$RG" \
     --name "$KEYVAULT" \
     --location "$REGION" \
+    --enable-rbac-authorization false \
     --enabled-for-deployment true \
     --enabled-for-disk-encryption true \
     --enabled-for-template-deployment true
@@ -255,6 +293,7 @@ function set_start_task_command() {
 
   read -r -d '' commands <<EOF
 sleep 60
+sudo chown _azbatch:_azbatchgrp /mnt/batch/tasks/fsmounts/data
 sudo rpm --import https://repo.almalinux.org/almalinux/RPM-GPG-KEY-AlmaLinux
 sudo yum upgrade -y almalinux-release
 sudo yum install -y https://ecsft.cern.ch/dist/cvmfs/cvmfs-release/cvmfs-release-latest.noarch.rpm
@@ -285,12 +324,13 @@ function create_pool() {
   IFS=':' read -r publisher offer sku version <<<"$VMIMAGE"
 
   nodeagent_sku_id=$(get_node_agent_sku)
+  POOLNAME="$POOLNAME"$(get_random_code)
 
   set_start_task_command START_TASK
 
-  nfs_share_hostname="${STORAGEACCOUNT}.file.core.windows.net"
+  nfs_share_hostname="${STORAGEACCOUNT}.blob.core.windows.net"
   nfs_fileshare=${STORAGEFILE}
-  nfs_share_directory="/${STORAGEACCOUNT}/${nfs_fileshare}"
+  nfs_share_directory="${STORAGEACCOUNT}/${nfs_fileshare}"
   subnetid=$(get_subnetid)
 
   cat <<EOF >"$JSON_POOL"
@@ -323,7 +363,7 @@ function create_pool() {
           "nfsMountConfiguration": {
               "source": "${nfs_share_hostname}:/${nfs_share_directory}",
               "relativeMountPath": "$STORAGEFILE",
-              "mountOptions": "-o rw,hard,rsize=65536,wsize=65536,vers=4,minorversion=1,tcp,sec=sys"
+              "mountOptions": "-o sec=sys,vers=3,nolock,proto=tcp"
           }
       }
   ],
@@ -349,6 +389,7 @@ EOF
 
 function create_job() {
 
+  JOBNAME="$JOBNAME"$(get_random_code)
   az batch job create \
     --id "$JOBNAME" \
     --pool-id "$POOLNAME"
@@ -445,12 +486,12 @@ parse_arguments() {
 ##############################################################################
 parse_arguments "$@"
 setup_variables
-create_resource_group
-create_vnet_subnet
-peer_vpn
-create_storage_account_files_nfs
-create_vm
-create_batch_account_with_usersubscription
+# create_resource_group
+# create_vnet_subnet
+# peer_vpn
+# create_storage_account_files_nfs
+# create_vm
+# create_batch_account_with_usersubscription
 login_batch_with_usersubcription
 create_pool
 create_job
