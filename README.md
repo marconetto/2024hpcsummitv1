@@ -13,7 +13,7 @@ on it.
 - Azure Batch interaction: Azure Portal, CLI, SDK, ARM, Bicep, TerraForm
 - Further reading references
 
-LINK TO PPT: HERE
+SLIDES [HERE](./azure_batch.pptx)
 
 
 ### 2. Hello world task via Azure Portal (20min)
