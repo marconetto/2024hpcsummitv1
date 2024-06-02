@@ -1,18 +1,13 @@
 #!/usr/bin/env bash
 
 set -x
-# RG=netto240530test5
 SKU=Standard_HB120-16rs_v3
 # VMIMAGE=microsoft-dsvm:ubuntu-hpc:2204:latest
 VMIMAGE=almalinux:almalinux-hpc:8_6-hpc-gen2:latest
 # NODEAGENTSKUID="batch.node.ubuntu 22.04"
 NODEAGENTSKUID="batch.node.el 8"
 REGION=eastus
-#
-# STORAGEACCOUNT="$RG"sa
-# BATCHACCOUNT="$RG"ba
-# KEYVAULT="$RG"kv
-#
+
 STORAGEFILE=data
 
 JSON_POOL=pool_nfs.json
@@ -23,9 +18,6 @@ VNETADDRESS=10.14.0.0
 VPNRG=nettovpn2
 VPNVNET=nettovpn2vnet1
 
-# VMNAMEPREFIX="$RG"vm
-# VMVNETNAME="$RG"VNET
-# VMSUBNETNAME="$RG"SUBNET
 ADMINUSER=azureuser
 DNSZONENAME="privatelink.blob.core.windows.net"
 
@@ -486,12 +478,12 @@ parse_arguments() {
 ##############################################################################
 parse_arguments "$@"
 setup_variables
-# create_resource_group
-# create_vnet_subnet
+create_resource_group
+create_vnet_subnet
 # peer_vpn
-# create_storage_account_files_nfs
-# create_vm
-# create_batch_account_with_usersubscription
+create_storage_account_files_nfs
+create_vm
+create_batch_account_with_usersubscription
 login_batch_with_usersubcription
 create_pool
 create_job
