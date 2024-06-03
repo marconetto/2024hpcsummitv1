@@ -9,15 +9,15 @@
    5. Keep rest of the properties as default
    6. Review + create
   
-      ## Add containers to the Azure Storage
-      1. Go to newly created storage account
-         2. Add two containers named, "input" and "output" to the storage account
-         3. Copy the files from [here](https://github.com/Azure-Samples/batch-python-ffmpeg-tutorial/tree/master/src/InputFiles) to the "input" container
-                - Download the files locally first and upload them into the input container
+## Add containers to the Azure Storage
+   1. Go to newly created storage account
+   2. Add two containers named, "input" and "output" to the storage account
+   3. Copy the files from [here](https://github.com/Azure-Samples/batch-python-ffmpeg-tutorial/tree/master/src/InputFiles) to the "input" container
+         - Download the files locally first and upload them into the input container
 
 ## Link Azure storage and batch accounts
             
-1. Go to the batch accoutn
+1. Go to the batch account.
 2. Select Storage account from laeft side navigation pane and click on select a storage account.
 3. Select the storage account you created and click save.
 
@@ -27,7 +27,7 @@ Navigate to the Access Keys from the left navigation pane
 Copy the storage account name and Key1 key. Keep them handy for the next part. 
 
 
-    ### Create a Job and parallel tasks
+### Create a Job and parallel tasks
    1. Go to the batch accoutn and Create a job. name it as "yourinitials"-ffmpegdemo
    2. Add a task in the job, and name it as task1
    3. Enter the command in command line as given below (replace the storage account and storage account key)
