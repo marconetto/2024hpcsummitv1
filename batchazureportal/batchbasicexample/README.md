@@ -24,6 +24,8 @@
 /bin/bash -c "sudo apt-get update && sudo apt-get install -y ffmpeg"
 ```
 
+**Note**: ffmpeg will be used for next section.
+
 9. Select the Elevation level - Pool autouser, Admin'
 10. Set Wait for success to True
 11. Click OK. This triggers the action of Creation of Pool. You will see that the pool immideately goes to "resizing" in Allocation state. 
