@@ -43,9 +43,10 @@ az storage blob upload --account-name $mystorageaccount --account-key $key --con
 
 4. Select 'Task autouser, Admin' in Elevation Level
 5. Click on Resource Files. 
-6. Select "Pick Storage Blob" and search for the storage account you created earlier, select the "input" container and choose the file "LowPriVMs-1.mp4"
-7. Click Submit
-8. Submit the task.
-9. Monitor the task progress by clicking on the task name on job page. 
-10. Repeat the above steps for other files in the Input container. 
+6. Select "Pick Storage Blob". Check the "Include SAS" checkbox and click OK.
+7. Search for the storage account you created earlier, select the "input" container and choose the file "LowPriVMs-1.mp4"
+8. Click Submit
+9. Submit the task.
+10. Monitor the task progress by clicking on the task name on job page. 
+11. Repeat the above steps for other files in the Input container. 
 
