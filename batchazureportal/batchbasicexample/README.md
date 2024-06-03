@@ -21,7 +21,7 @@
 8. Enter the following command line 
 
 ```
-/bin/bash -c "sudo apt-get update && sudo apt-get install -y ffmpeg"
+/bin/bash -c "sudo apt-get update && sudo apt-get install -y ffmpeg && curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash"
 ```
 
 **Note**: ffmpeg will be used for next section.
