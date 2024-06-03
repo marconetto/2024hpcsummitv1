@@ -2,7 +2,7 @@
 
    ## Create a storage account
 
-   1. In Azure portal, Go to Home.
+   1. In Azure portal, go to Home.
    2. Search for storage accounts, and create new.
    3. Use the resource group created in the previous section.
    4. Name the new account as "yourinitials"hpcbatchdemostorageaccnt.
@@ -22,14 +22,12 @@
 3. Select the storage account you created and click save.
 
    
-Go to storage account page 
-Navigate to the Access Keys from the left navigation pane 
-Copy the storage account name and Key1 key. Keep them handy for the next part. 
+Go to storage account page. Navigate to the Access Keys from the left navigation pane. Copy the storage account name and 'Key1' key. Keep them handy for the next part. 
 
 
 ### Create a Job and parallel tasks
-   1. Go to the batch accoutn and Create a job. name it as "yourinitials"-ffmpegdemo
-   2. Add a task in the job, and name it as task1
+   1. Go to the batch accoutn and Create a job. name it as "yourinitials"-ffmpegdemo.
+   2. Add a task in the job, and name it as task1.
    3. Enter the command in command line as given below (replace the storage account and storage account key)
 
 ```
