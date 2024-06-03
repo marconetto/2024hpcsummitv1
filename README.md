@@ -23,7 +23,7 @@ SLIDES [HERE](./azure_batch.pptx)
 - 1 pool, 1 job, 4 tasks for a simple SKU
 - Show visualization the output of each task executed
 
-LINK: [HERE](batchazureportalbasicjob/README.md)
+LINK: [HERE](basicjob/README.md)
 
 
 ### 3. Embarrassingly parallel application via Azure Portal (10min)
@@ -33,7 +33,7 @@ LINK: [HERE](batchazureportalbasicjob/README.md)
 - Move the input and app to the blob
 - Run app with 4 tasks and store the output also in blob
 
-LINK: [HERE](batchazureportalparalleljob/README.md)
+LINK: [HERE](paralleljob/README.md)
 
 
 ### 4. Run MPI application (OpenFOAM) via Azure CLI (10min)
