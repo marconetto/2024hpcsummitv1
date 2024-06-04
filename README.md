@@ -54,3 +54,9 @@ Details: [HERE](./batchmpicli/README.md)
     - custom images
 
 LINK to HPCAdvisor: [HERE](https://azure.github.io/hpcadvisor/)
+
+
+NOTES:
+
+You may need to enable batch to have contributor access to the subscription:
+az role assignment create --assignee ddbf3205-c6bd-46ae-8127-60eb93363864 --role contributor "/subscriptions/<subscription id>"
