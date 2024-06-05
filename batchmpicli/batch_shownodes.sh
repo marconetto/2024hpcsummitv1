@@ -213,7 +213,10 @@ function create_keyvault() {
 
 function create_batch_account_with_usersubscription() {
 
+  # Register the Batch resource provider (one-time operation).
+  az provider register --namespace Microsoft.Batch
   create_keyvault
+  setkeyvault_policy
 
   # Create the Batch account, referencing the Key Vault either by name (if they
   # exist in the same resource group) or by its full resource ID.
@@ -228,7 +231,6 @@ function create_batch_account_with_usersubscription() {
   subid=$(az account show | jq -r '.id')
   az role assignment create --assignee ddbf3205-c6bd-46ae-8127-60eb93363864 --role contributor --scope "/subscriptions/$subid"
 
-  setkeyvault_policy
 }
 
 function login_batch_with_usersubcription() {
