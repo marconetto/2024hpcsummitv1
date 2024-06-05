@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 RG=netto240520v3
-SKU=Standard_HB120-16rs_v3
+SKU=Standard_D2s_v3
 VMIMAGE=almalinux:almalinux-hpc:8_6-hpc-gen2:latest
 NODEAGENTSKUID="batch.node.el 8"
 REGION=eastus
@@ -201,6 +201,8 @@ function create_batch_account_with_usersubscription() {
 
   # Allow Azure Batch to access the subscription (one-time operation).
   # az role assignment create --assignee ddbf3205-c6bd-46ae-8127-60eb93363864 --role contributor
+  subid=$(az account show | jq -r '.id')
+  az role assignment create --assignee ddbf3205-c6bd-46ae-8127-60eb93363864 --role contributor --scope "/subscriptions/$subid"
 
   create_keyvault
 
@@ -387,7 +389,7 @@ function add_mpi_program_storage() {
 
 create_resource_group
 create_vnet_subnet
-peer_vpn
+# peer_vpn
 create_storage_account_files_nfs
 create_vm
 create_batch_account_with_usersubscription

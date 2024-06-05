@@ -242,6 +242,9 @@ function create_keyvault() {
 function create_batch_account_with_usersubscription() {
 
   # Allow Azure Batch to access the subscription (one-time operation).
+  subid=$(az account show | jq -r '.id')
+  az role assignment create --assignee ddbf3205-c6bd-46ae-8127-60eb93363864 --role contributor --scope "/subscriptions/$subid"
+
   # az role assignment create --assignee ddbf3205-c6bd-46ae-8127-60eb93363864 --role contributor
 
   create_keyvault
