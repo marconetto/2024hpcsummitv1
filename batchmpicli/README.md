@@ -4,7 +4,7 @@
 Download bash script:
 
 ```
-git clone@https://github.com/marconetto/2024hpcsummitv1.git
+git clone https://github.com/marconetto/2024hpcsummitv1.git
 cd 2024hpcsummitv1/batchmpicli
 ```
 
