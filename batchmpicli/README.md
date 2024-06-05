@@ -14,6 +14,10 @@ Run executable:
 ./batch_openfoam.sh -g myresourcegroup
 ```
 
+Storage account will follow the name `<myresourcegroup>sa`. So choose a resource
+group name that will not generate conflict. You can choose for instance
+`<yourlastname><year><month><day><deploymentversion>`.
+
 Copy the task results to local machine via ``scp`` to jumpbox VM, ``azcopy``, or
 [Azure Storage Explorer ](https://azure.microsoft.com/en-us/products/storage/storage-explorer).
 You may need to add a DNS entry in your local machine to solve the private IP of the storate account
