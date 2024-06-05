@@ -286,9 +286,7 @@ function set_start_task_command() {
   local commands
 
   read -r -d '' commands <<EOF
-hostname
-env
-pwd
+sudo chown _azbatch:_azbatchgrp /mnt/batch/tasks/fsmounts/data
 EOF
 
   IFS=$'\n' read -r -d '' -a commands_array <<<"$commands"
