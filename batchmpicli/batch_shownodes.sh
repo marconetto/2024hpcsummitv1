@@ -109,24 +109,58 @@ function get_subnetid() {
 
 function create_storage_account_files_nfs() {
 
+  # echo "$STORAGEACCOUNT"
+  # az storage account create \
+  #   --resource-group "$RG" \
+  #   --name "$STORAGEACCOUNT" \
+  #   --location "$REGION" \
+  #   --kind StorageV2 \
+  #   --sku Premium_LRS \
+  #   --enable-nfs-v3 true \
+  #   --https-only false \
+  #   --output none
+
   az storage account create \
     --resource-group "$RG" \
     --name "$STORAGEACCOUNT" \
-    --location $REGION \
-    --kind FileStorage \
+    --location "$REGION" \
+    --kind BlockBlobStorage \
     --sku Premium_LRS \
-    --output none
+    --https-only false \
+    --enable-hierarchical-namespace true \
+    --enable-nfs-v3 true \
+    --default-action Deny
+
+  az network vnet subnet update --resource-group "$RG" \
+    --vnet-name "$VMVNETNAME" \
+    --name "$VMSUBNETNAME" \
+    --service-endpoints Microsoft.Storage
+
+  az storage account network-rule add --resource-group "$RG" \
+    --account-name "$STORAGEACCOUNT" \
+    --vnet-name "$VMVNETNAME" \
+    --subnet "$VMSUBNETNAME"
+
+  # az storage account network-rule add \
+  #   --account-name mystor
+  #   --resource-group MyResourceGroup \
+  #   --vnet-name myVNet \
+  #   --subnet mySubnet
 
   # disable secure transfer is required for nfs support
-  az storage account update --https-only false \
-    --name "$STORAGEACCOUNT" --resource-group "$RG"
+  #  az storage account update --https-only false \
+  #   --name "$STORAGEACCOUNT" --resource-group "$RG"
 
-  az storage share-rm create \
+  az storage container-rm create \
     --storage-account "$STORAGEACCOUNT" \
-    --enabled-protocol NFS \
-    --root-squash NoRootSquash \
-    --name $STORAGEFILE \
-    --quota 100
+    --name "$STORAGEFILE" \
+    --root-squash NoRootSquash
+  # az storage container create \
+  #   --storage-account "$STORAGEACCOUNT" \
+  #   --enabled-protocol NFS \
+  #   --root-squash NoRootSquash \
+  #   --name "$STORAGEFILE" \
+  #   --quota 100
 
   storage_account_id=$(az storage account show \
     --resource-group "$RG" --name "$STORAGEACCOUNT" \
@@ -136,16 +170,16 @@ function create_storage_account_files_nfs() {
 
   endpoint=$(az network private-endpoint create \
     --resource-group "$RG" --name "$STORAGEACCOUNT-PrivateEndpoint" \
-    --location $REGION \
+    --location "$REGION" \
     --subnet "$subnetid" \
     --private-connection-resource-id "${storage_account_id}" \
-    --group-id "file" \
+    --group-id "blob" \
     --connection-name "$STORAGEACCOUNT-Connection" \
     --query "id" -o tsv)
 
   dns_zone=$(az network private-dns zone create \
     --resource-group "$RG" \
-    --name $DNSZONENAME \
+    --name "$DNSZONENAME" \
     --query "id" -o tsv)
 
   vnetid=$(az network vnet show \
@@ -155,7 +189,7 @@ function create_storage_account_files_nfs() {
 
   az network private-dns link vnet create \
     --resource-group "$RG" \
-    --zone-name $DNSZONENAME \
+    --zone-name "$DNSZONENAME" \
     --name "$VMVNETNAME-DnsLink" \
     --virtual-network "$vnetid" \
     --registration-enabled false
@@ -170,20 +204,20 @@ function create_storage_account_files_nfs() {
 
   az network private-dns record-set a create \
     --resource-group "$RG" \
-    --zone-name $DNSZONENAME \
+    --zone-name "$DNSZONENAME" \
     --name "$STORAGEACCOUNT"
 
   az network private-dns record-set a add-record \
     --resource-group "$RG" \
-    --zone-name $DNSZONENAME \
+    --zone-name "$DNSZONENAME" \
     --record-set-name "$STORAGEACCOUNT" \
     --ipv4-address "${endpoint_ip}"
 
-  az storage share-rm list -g "$RG" \
-    --storage-account "$STORAGEACCOUNT"
+  #az storage share-rm list -g "$RG" \
+  #  --storage-account "$STORAGEACCOUNT"
 
   echo "inside the test VM:"
-  echo "sudo mkdir /nfs ; sudo mount $STORAGEACCOUNT.file.core.windows.net:/$STORAGEACCOUNT/$STORAGEFILE /nfs/"
+  echo "sudo mkdir /nfs ; sudo mount -o sec=sys,vers=3,nolock,proto=tcp $STORAGEACCOUNT.blob.core.windows.net:/$STORAGEACCOUNT/$STORAGEFILE /nfs/"
 }
 
 function create_keyvault() {
@@ -278,7 +312,7 @@ function create_pool() {
 
   set_start_task_command START_TASK
 
-  nfs_share_hostname="${STORAGEACCOUNT}.file.core.windows.net"
+  nfs_share_hostname="${STORAGEACCOUNT}.blob.core.windows.net"
   nfs_fileshare=${STORAGEFILE}
   nfs_share_directory="${STORAGEACCOUNT}/${nfs_fileshare}"
   subnetid=$(get_subnetid)
@@ -313,7 +347,7 @@ function create_pool() {
           "nfsMountConfiguration": {
               "source": "${nfs_share_hostname}:/${nfs_share_directory}",
               "relativeMountPath": "$STORAGEFILE",
-              "mountOptions": "-o rw,hard,rsize=65536,wsize=65536,vers=4,minorversion=1,tcp,sec=sys"
+              "mountOptions": "-o sec=sys,vers=3,nolock,proto=tcp"
           }
       }
   ],
