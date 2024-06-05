@@ -190,6 +190,14 @@ function create_storage_account_files_nfs() {
   echo "sudo mkdir /nfs ; sudo mount -o sec=sys,vers=3,nolock,proto=tcp $STORAGEACCOUNT.blob.core.windows.net:/$STORAGEACCOUNT/$STORAGEFILE /nfs/"
 }
 
+function setkeyvault_policy() {
+
+  az keyvault set-policy --resource-group "$RG" \
+    --name "$KEYVAULT" \
+    --spn ddbf3205-c6bd-46ae-8127-60eb93363864 \
+    --key-permissions all \
+    --secret-permissions all
+}
 function create_keyvault() {
 
   echo "Creating keyVault"
@@ -201,12 +209,6 @@ function create_keyvault() {
     --enabled-for-deployment true \
     --enabled-for-disk-encryption true \
     --enabled-for-template-deployment true
-
-  az keyvault set-policy --resource-group "$RG" \
-    --name "$KEYVAULT" \
-    --spn ddbf3205-c6bd-46ae-8127-60eb93363864 \
-    --key-permissions all \
-    --secret-permissions all
 }
 
 function create_batch_account_with_usersubscription() {
@@ -225,6 +227,8 @@ function create_batch_account_with_usersubscription() {
   # az role assignment create --assignee ddbf3205-c6bd-46ae-8127-60eb93363864 --role contributor
   subid=$(az account show | jq -r '.id')
   az role assignment create --assignee ddbf3205-c6bd-46ae-8127-60eb93363864 --role contributor --scope "/subscriptions/$subid"
+
+  setkeyvault_policy
 }
 
 function login_batch_with_usersubcription() {
