@@ -109,17 +109,6 @@ function get_subnetid() {
 
 function create_storage_account_files_nfs() {
 
-  # echo "$STORAGEACCOUNT"
-  # az storage account create \
-  #   --resource-group "$RG" \
-  #   --name "$STORAGEACCOUNT" \
-  #   --location "$REGION" \
-  #   --kind StorageV2 \
-  #   --sku Premium_LRS \
-  #   --enable-nfs-v3 true \
-  #   --https-only false \
-  #   --output none
-
   az storage account create \
     --resource-group "$RG" \
     --name "$STORAGEACCOUNT" \
@@ -141,26 +130,10 @@ function create_storage_account_files_nfs() {
     --vnet-name "$VMVNETNAME" \
     --subnet "$VMSUBNETNAME"
 
-  # az storage account network-rule add \
-  #   --account-name mystor
-  #   --resource-group MyResourceGroup \
-  #   --vnet-name myVNet \
-  #   --subnet mySubnet
-
-  # disable secure transfer is required for nfs support
-  #  az storage account update --https-only false \
-  #   --name "$STORAGEACCOUNT" --resource-group "$RG"
-
   az storage container-rm create \
     --storage-account "$STORAGEACCOUNT" \
     --name "$STORAGEFILE" \
     --root-squash NoRootSquash
-  # az storage container create \
-  #   --storage-account "$STORAGEACCOUNT" \
-  #   --enabled-protocol NFS \
-  #   --root-squash NoRootSquash \
-  #   --name "$STORAGEFILE" \
-  #   --quota 100
 
   storage_account_id=$(az storage account show \
     --resource-group "$RG" --name "$STORAGEACCOUNT" \
@@ -213,9 +186,6 @@ function create_storage_account_files_nfs() {
     --record-set-name "$STORAGEACCOUNT" \
     --ipv4-address "${endpoint_ip}"
 
-  #az storage share-rm list -g "$RG" \
-  #  --storage-account "$STORAGEACCOUNT"
-
   echo "inside the test VM:"
   echo "sudo mkdir /nfs ; sudo mount -o sec=sys,vers=3,nolock,proto=tcp $STORAGEACCOUNT.blob.core.windows.net:/$STORAGEACCOUNT/$STORAGEFILE /nfs/"
 }
@@ -241,11 +211,6 @@ function create_keyvault() {
 
 function create_batch_account_with_usersubscription() {
 
-  # Allow Azure Batch to access the subscription (one-time operation).
-  # az role assignment create --assignee ddbf3205-c6bd-46ae-8127-60eb93363864 --role contributor
-  subid=$(az account show | jq -r '.id')
-  az role assignment create --assignee ddbf3205-c6bd-46ae-8127-60eb93363864 --role contributor --scope "/subscriptions/$subid"
-
   create_keyvault
 
   # Create the Batch account, referencing the Key Vault either by name (if they
@@ -255,7 +220,11 @@ function create_batch_account_with_usersubscription() {
     --name "$BATCHACCOUNT" \
     --location "$REGION" \
     --keyvault "$KEYVAULT"
-  # --storage-account $STORAGEACCOUNT    # does not support azure fileshare
+
+  # Allow Azure Batch to access the subscription (one-time operation).
+  # az role assignment create --assignee ddbf3205-c6bd-46ae-8127-60eb93363864 --role contributor
+  subid=$(az account show | jq -r '.id')
+  az role assignment create --assignee ddbf3205-c6bd-46ae-8127-60eb93363864 --role contributor --scope "/subscriptions/$subid"
 }
 
 function login_batch_with_usersubcription() {
