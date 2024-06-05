@@ -1,33 +1,40 @@
 #!/usr/bin/env bash
 
-RG=netto240520v3
-SKU=Standard_D2s_v3
+set -x
+SKU=Standard_HB120-16rs_v3
+# VMIMAGE=microsoft-dsvm:ubuntu-hpc:2204:latest
 VMIMAGE=almalinux:almalinux-hpc:8_6-hpc-gen2:latest
+# NODEAGENTSKUID="batch.node.ubuntu 22.04"
 NODEAGENTSKUID="batch.node.el 8"
 REGION=eastus
-
-STORAGEACCOUNT="$RG"sa
-BATCHACCOUNT="$RG"ba
-KEYVAULT="$RG"kv
 
 STORAGEFILE=data
 
 JSON_POOL=pool_nfs.json
 JSON_TASK=task_mpi.json
 
-VNETADDRESS=10.32.0.0
+VNETADDRESS=10.14.0.0
 
 VPNRG=nettovpn2
 VPNVNET=nettovpn2vnet1
 
-VMNAMEPREFIX="$RG"vm
-VMVNETNAME="$RG"VNET
-VMSUBNETNAME="$RG"SUBNET
 ADMINUSER=azureuser
-DNSZONENAME="privatelink.file.core.windows.net"
+DNSZONENAME="privatelink.blob.core.windows.net"
 
 POOLNAME=mpipool
 JOBNAME=mpijob
+
+function setup_variables() {
+
+  STORAGEACCOUNT="$RG"sa
+  BATCHACCOUNT="$RG"ba
+  KEYVAULT="$RG"kv
+
+  VMNAMEPREFIX="$RG"vm
+  VMVNETNAME="$RG"VNET
+  VMSUBNETNAME="$RG"SUBNET
+
+}
 
 function get_random_code() {
 
@@ -38,15 +45,15 @@ function get_random_code() {
 function create_resource_group() {
 
   az group create --location $REGION \
-    --name $RG
+    --name "$RG"
 }
 
 function create_vnet_subnet() {
 
-  az network vnet create -g $RG \
-    -n $VMVNETNAME \
+  az network vnet create -g "$RG" \
+    -n "$VMVNETNAME" \
     --address-prefix "$VNETADDRESS"/16 \
-    --subnet-name $VMSUBNETNAME \
+    --subnet-name "$VMSUBNETNAME" \
     --subnet-prefixes "$VNETADDRESS"/24
 }
 
@@ -67,17 +74,17 @@ runcmd:
 EOF
 
   az vm create -n "$vmname" \
-    -g $RG \
+    -g "$RG" \
     --image $VMIMAGE \
     --size $SKU \
-    --vnet-name $VMVNETNAME \
-    --subnet $VMSUBNETNAME \
+    --vnet-name "$VMVNETNAME" \
+    --subnet "$VMSUBNETNAME" \
     --public-ip-address "" \
     --admin-username $ADMINUSER \
     --generate-ssh-keys \
     --custom-data $FILE
 
-  private_ip=$(az vm show -g $RG -n "$vmname" -d --query privateIps -otsv)
+  private_ip=$(az vm show -g "$RG" -n "$vmname" -d --query privateIps -otsv)
   echo "Private IP of $vmname: ${private_ip}"
 }
 
@@ -87,14 +94,14 @@ function peer_vpn() {
 
   curl https://raw.githubusercontent.com/marconetto/azadventures/main/chapter3/create_peering_vpn.sh -O
 
-  bash ./create_peering_vpn.sh $VPNRG $VPNVNET $RG $VMVNETNAME
+  bash ./create_peering_vpn.sh $VPNRG $VPNVNET "$RG" "$VMVNETNAME"
 }
 
 function get_subnetid() {
 
   subnetid=$(az network vnet subnet show \
-    --resource-group $RG --vnet-name $VMVNETNAME \
-    --name $VMSUBNETNAME \
+    --resource-group "$RG" --vnet-name "$VMVNETNAME" \
+    --name "$VMSUBNETNAME" \
     --query "id" -o tsv)
 
   echo "$subnetid"
@@ -103,8 +110,8 @@ function get_subnetid() {
 function create_storage_account_files_nfs() {
 
   az storage account create \
-    --resource-group $RG \
-    --name $STORAGEACCOUNT \
+    --resource-group "$RG" \
+    --name "$STORAGEACCOUNT" \
     --location $REGION \
     --kind FileStorage \
     --sku Premium_LRS \
@@ -112,23 +119,23 @@ function create_storage_account_files_nfs() {
 
   # disable secure transfer is required for nfs support
   az storage account update --https-only false \
-    --name $STORAGEACCOUNT --resource-group $RG
+    --name "$STORAGEACCOUNT" --resource-group "$RG"
 
   az storage share-rm create \
-    --storage-account $STORAGEACCOUNT \
+    --storage-account "$STORAGEACCOUNT" \
     --enabled-protocol NFS \
     --root-squash NoRootSquash \
     --name $STORAGEFILE \
     --quota 100
 
   storage_account_id=$(az storage account show \
-    --resource-group $RG --name $STORAGEACCOUNT \
+    --resource-group "$RG" --name "$STORAGEACCOUNT" \
     --query "id" -o tsv)
 
   subnetid=$(get_subnetid)
 
   endpoint=$(az network private-endpoint create \
-    --resource-group $RG --name "$STORAGEACCOUNT-PrivateEndpoint" \
+    --resource-group "$RG" --name "$STORAGEACCOUNT-PrivateEndpoint" \
     --location $REGION \
     --subnet "$subnetid" \
     --private-connection-resource-id "${storage_account_id}" \
@@ -137,17 +144,17 @@ function create_storage_account_files_nfs() {
     --query "id" -o tsv)
 
   dns_zone=$(az network private-dns zone create \
-    --resource-group $RG \
+    --resource-group "$RG" \
     --name $DNSZONENAME \
     --query "id" -o tsv)
 
   vnetid=$(az network vnet show \
-    --resource-group $RG \
-    --name $VMVNETNAME \
+    --resource-group "$RG" \
+    --name "$VMVNETNAME" \
     --query "id" -o tsv)
 
   az network private-dns link vnet create \
-    --resource-group $RG \
+    --resource-group "$RG" \
     --zone-name $DNSZONENAME \
     --name "$VMVNETNAME-DnsLink" \
     --virtual-network "$vnetid" \
@@ -162,18 +169,18 @@ function create_storage_account_files_nfs() {
     --query "ipConfigurations[0].privateIPAddress" -o tsv)
 
   az network private-dns record-set a create \
-    --resource-group $RG \
+    --resource-group "$RG" \
     --zone-name $DNSZONENAME \
-    --name $STORAGEACCOUNT
+    --name "$STORAGEACCOUNT"
 
   az network private-dns record-set a add-record \
-    --resource-group $RG \
+    --resource-group "$RG" \
     --zone-name $DNSZONENAME \
-    --record-set-name $STORAGEACCOUNT \
+    --record-set-name "$STORAGEACCOUNT" \
     --ipv4-address "${endpoint_ip}"
 
-  az storage share-rm list -g $RG \
-    --storage-account $STORAGEACCOUNT
+  az storage share-rm list -g "$RG" \
+    --storage-account "$STORAGEACCOUNT"
 
   echo "inside the test VM:"
   echo "sudo mkdir /nfs ; sudo mount $STORAGEACCOUNT.file.core.windows.net:/$STORAGEACCOUNT/$STORAGEFILE /nfs/"
@@ -183,15 +190,15 @@ function create_keyvault() {
 
   echo "Creating keyVault"
 
-  az keyvault create --resource-group $RG \
-    --name $KEYVAULT \
+  az keyvault create --resource-group "$RG" \
+    --name "$KEYVAULT" \
     --location "$REGION" \
     --enabled-for-deployment true \
     --enabled-for-disk-encryption true \
     --enabled-for-template-deployment true
 
-  az keyvault set-policy --resource-group $RG \
-    --name $KEYVAULT \
+  az keyvault set-policy --resource-group "$RG" \
+    --name "$KEYVAULT" \
     --spn ddbf3205-c6bd-46ae-8127-60eb93363864 \
     --key-permissions all \
     --secret-permissions all
@@ -209,10 +216,10 @@ function create_batch_account_with_usersubscription() {
   # Create the Batch account, referencing the Key Vault either by name (if they
   # exist in the same resource group) or by its full resource ID.
   echo "Creating batchAccount"
-  az batch account create --resource-group $RG \
-    --name $BATCHACCOUNT \
+  az batch account create --resource-group "$RG" \
+    --name "$BATCHACCOUNT" \
     --location "$REGION" \
-    --keyvault $KEYVAULT
+    --keyvault "$KEYVAULT"
   # --storage-account $STORAGEACCOUNT    # does not support azure fileshare
 }
 
@@ -223,8 +230,8 @@ function login_batch_with_usersubcription() {
   # authenticated via an Azure Active Directory token.
   echo "login into the batch account with user subscription"
   az batch account login \
-    --name $BATCHACCOUNT \
-    --resource-group $RG
+    --name "$BATCHACCOUNT" \
+    --resource-group "$RG"
 }
 
 function wrap_commands_in_shell() {
@@ -386,6 +393,46 @@ function add_mpi_program_storage() {
     --job-id $JOBNAME \
     --command-line "/bin/bash -c 'cd \$AZ_BATCH_NODE_MOUNTS_DIR/${STORAGEFILE} ; pwd ; wget -N -L $mpistuffurl ; wget -N -L $mpicodeurl ; chmod +x compile.sh ; ./compile.sh'"
 }
+
+usage() {
+  echo "Usage: $0 -r <resourcegroup>"
+  echo "  -r <resourcegroup>  Resource group"
+  exit
+}
+
+parse_arguments() {
+
+  while getopts "r:" opt; do
+    case ${opt} in
+    r)
+      option_r=$OPTARG
+      ;;
+
+    \?)
+      echo "Invalid option: $OPTARG" 1>&2
+      usage
+      ;;
+    :)
+      echo "Option -$opt requires an argument." 1>&2
+      usage
+      ;;
+    esac
+  done
+  shift $((OPTIND - 1))
+
+  if [ -z "${option_r+x}" ]; then
+    echo "Missing required options."
+    usage
+  fi
+  RG=$option_r
+
+}
+
+##############################################################################
+# MAIN
+##############################################################################
+parse_arguments "$@"
+setup_variables
 
 create_resource_group
 create_vnet_subnet
