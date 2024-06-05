@@ -274,12 +274,13 @@ function create_pool() {
   IFS=':' read -r publisher offer sku version <<<"$VMIMAGE"
 
   nodeagent_sku_id=$(get_node_agent_sku)
+  POOLNAME="$POOLNAME"$(get_random_code)
 
   set_start_task_command START_TASK
 
   nfs_share_hostname="${STORAGEACCOUNT}.file.core.windows.net"
   nfs_fileshare=${STORAGEFILE}
-  nfs_share_directory="/${STORAGEACCOUNT}/${nfs_fileshare}"
+  nfs_share_directory="${STORAGEACCOUNT}/${nfs_fileshare}"
   subnetid=$(get_subnetid)
 
   cat <<EOF >$JSON_POOL
@@ -337,9 +338,10 @@ EOF
 
 function create_job() {
 
+  JOBNAME="$JOBNAME"$(get_random_code)
   az batch job create \
-    --id $JOBNAME \
-    --pool-id $POOLNAME
+    --id "$JOBNAME" \
+    --pool-id "$POOLNAME"
 }
 
 function create_mpirun_task() {
@@ -376,7 +378,7 @@ function create_mpirun_task() {
 EOF
 
   az batch task create \
-    --job-id $JOBNAME \
+    --job-id "$JOBNAME" \
     --json-file $JSON_TASK
 }
 
@@ -391,7 +393,7 @@ function add_mpi_program_storage() {
 
   az batch task create \
     --task-id mpi-compile_"${random_number}" \
-    --job-id $JOBNAME \
+    --job-id "$JOBNAME" \
     --command-line "/bin/bash -c 'cd \$AZ_BATCH_NODE_MOUNTS_DIR/${STORAGEFILE} ; pwd ; wget -N -L $mpistuffurl ; wget -N -L $mpicodeurl ; chmod +x compile.sh ; ./compile.sh'"
 }
 
