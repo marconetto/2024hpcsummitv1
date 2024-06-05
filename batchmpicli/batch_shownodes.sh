@@ -218,6 +218,11 @@ function create_batch_account_with_usersubscription() {
   create_keyvault
   setkeyvault_policy
 
+  # Allow Azure Batch to access the subscription (one-time operation).
+  # az role assignment create --assignee ddbf3205-c6bd-46ae-8127-60eb93363864 --role contributor
+  subid=$(az account show | jq -r '.id')
+  az role assignment create --assignee ddbf3205-c6bd-46ae-8127-60eb93363864 --role contributor --scope "/subscriptions/$subid"
+
   # Create the Batch account, referencing the Key Vault either by name (if they
   # exist in the same resource group) or by its full resource ID.
   echo "Creating batchAccount"
@@ -225,11 +230,6 @@ function create_batch_account_with_usersubscription() {
     --name "$BATCHACCOUNT" \
     --location "$REGION" \
     --keyvault "$KEYVAULT"
-
-  # Allow Azure Batch to access the subscription (one-time operation).
-  # az role assignment create --assignee ddbf3205-c6bd-46ae-8127-60eb93363864 --role contributor
-  subid=$(az account show | jq -r '.id')
-  az role assignment create --assignee ddbf3205-c6bd-46ae-8127-60eb93363864 --role contributor --scope "/subscriptions/$subid"
 
 }
 
