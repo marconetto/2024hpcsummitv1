@@ -345,7 +345,7 @@ function create_job() {
     --pool-id "$POOLNAME"
 }
 
-function create_mpirun_task() {
+function create_run_task() {
 
   taskid="mpirun_"$(get_random_code)
 
@@ -383,7 +383,7 @@ EOF
     --json-file $JSON_TASK
 }
 
-function add_mpi_program_storage() {
+function creat_setup_task() {
 
   random_number=$(get_random_code)
 
@@ -447,5 +447,5 @@ create_batch_account_with_usersubscription
 login_batch_with_usersubcription
 create_pool
 create_job
-add_mpi_program_storage
-create_mpirun_task
+creat_setup_task
+create_run_task
