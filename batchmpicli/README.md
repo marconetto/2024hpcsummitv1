@@ -8,10 +8,17 @@ git clone https://github.com/marconetto/2024hpcsummitv1.git
 cd 2024hpcsummitv1/batchmpicli
 ```
 
-Run executable:
+Run simple mpi show nodes app:
 
 ```
-./batch_openfoam.sh -g myresourcegroup
+./batch_shownodes.sh -g myresourcegroup1
+```
+
+
+Run openfoam+mpi app:
+
+```
+./batch_openfoam.sh -g myresourcegroup2
 ```
 
 Storage account will follow the name `<myresourcegroup>sa`. So choose a resource
