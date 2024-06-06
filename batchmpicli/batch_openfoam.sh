@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 set -x
-SKU=Standard_HB120-16rs_v3
+SKU=Standard_HB120rs_v3
 # VMIMAGE=microsoft-dsvm:ubuntu-hpc:2204:latest
 VMIMAGE=almalinux:almalinux-hpc:8_6-hpc-gen2:latest
 # NODEAGENTSKUID="batch.node.ubuntu 22.04"
@@ -13,7 +13,7 @@ STORAGEFILE=data
 JSON_POOL=pool_nfs.json
 JSON_TASK=task_mpi.json
 
-VNETADDRESS=10.14.0.0
+VNETADDRESS=10.12.0.0
 
 VPNRG=nettovpn2
 VPNVNET=nettovpn2vnet1
@@ -406,7 +406,7 @@ function create_run_task() {
     },
     {
       "name": "PPN",
-      "value": "2"
+      "value": "120"
     }
   ],
   "userIdentity": {
