@@ -406,7 +406,7 @@ function create_run_task() {
     },
     {
       "name": "PPN",
-      "value": "120"
+      "value": "60"
     }
   ],
   "userIdentity": {
